@@ -1,0 +1,23 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
+    "files.associations": {
+        "docker-compose.yml": "yaml",
+        "cassandra_schema.cql": "sql"
+    },
+    "python.analysis.exclude": [
+        "**/*.yml",
+        "**/*.yaml",
+        "requirements.txt",
+        "database/**",
+        "dashboard/**"
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.python"
+    },
+    "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2
+    }
+}

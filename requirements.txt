@@ -1,0 +1,7 @@
+kafka-python
+cassandra-driver
+river
+numpy
+twilio
+pyspark
+py4j
