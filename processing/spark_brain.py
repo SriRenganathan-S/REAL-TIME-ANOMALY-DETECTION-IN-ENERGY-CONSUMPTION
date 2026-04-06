@@ -100,10 +100,16 @@ if IS_WINDOWS:
     last_heartbeat_time = 0
     heartbeat_interval = 5 
     
+    # --- LATENCY TRACKING ---
+    kafka_ingest_time = time.time()
+    
     print(f"🧠 Brain Active! Multi-Meter Learning Mode...")
     
     try:
         for message in consumer:
+            # Track when message is received from Kafka
+            kafka_ingest_time = time.time()
+            
             data = message.value
             meter_id = str(data.get('meter_id', 'unknown'))
             power = float(data['power_w'])
@@ -112,6 +118,8 @@ if IS_WINDOWS:
             freq = float(data.get('frequency_hz', 50.0))
             
             timestamp_obj = datetime.now()
+            spark_process_time = time.time()
+            latency_ms = int((spark_process_time - kafka_ingest_time) * 1000)
             features = {'power': power, 'voltage': voltage, 'current': current}
             
             # Get model for this meter
@@ -157,10 +165,15 @@ if IS_WINDOWS:
             # CRITICAL: Use meter_id from data
             query = """
                 INSERT INTO meter_readings (
-                    meter_id, timestamp, power_w, anomaly_score, status, voltage_v, current_a, frequency_hz
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    meter_id, timestamp, power_w, anomaly_score, status, voltage_v, current_a, frequency_hz, 
+                    kafka_ingest_time, spark_process_time, cassandra_write_time, latency_ms
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            session.execute(query, (meter_id, timestamp_obj, float(power), float(score), status, float(voltage), float(current), float(freq)))
+            cassandra_write_time = time.time()
+            session.execute(query, (
+                meter_id, timestamp_obj, float(power), float(score), status, float(voltage), 
+                float(current), float(freq), kafka_ingest_time, spark_process_time, cassandra_write_time, latency_ms
+            ))
             
             current_time = time.time()
             if current_time - last_heartbeat_time > heartbeat_interval:
