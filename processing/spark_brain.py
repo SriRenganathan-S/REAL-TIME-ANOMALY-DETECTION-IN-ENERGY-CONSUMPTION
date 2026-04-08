@@ -145,7 +145,7 @@ if IS_WINDOWS:
                 score = normalize_score(raw_score)  # Normalize to 0-1 range
                 model.learn_one(features)
                 
-                if score > 0.7:
+                if score > 0.9:
                     status = "CRITICAL"
                     time_since_last_alert = time.time() - meter_last_alerts[meter_id]
                     if time_since_last_alert > ALERT_COOLDOWN:
@@ -158,8 +158,14 @@ if IS_WINDOWS:
                         else:
                             print("📲 (Simulated Call Sent)")
                             meter_last_alerts[meter_id] = time.time()
+                elif score > 0.7:
+                    status = "ALERT"
+                    print(f"🟠 [{meter_id}] ALERT: {power}W (Score: {score:.2f})")
+                elif score > 0.5:
+                    status = "WARNING"
+                    print(f"🟡 [{meter_id}] WARNING: {power}W (Score: {score:.2f})")
                 else:
-                    status = "Normal"
+                    status = "NORMAL"
                     print(f"✅ [{meter_id}] Safe: {power}W (Score: {score:.2f})")
     
             # CRITICAL: Use meter_id from data
