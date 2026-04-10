@@ -24,7 +24,7 @@ ALERT_COOLDOWN_MINUTES = 5
 
 # Credentials
 ACCOUNT_SID = 'AC62a66ce4e128af99857bfa8e7f07e3eb'
-AUTH_TOKEN = '8211f46233a3316395119ae522feaf37'
+AUTH_TOKEN = '07f410e52a7701cc595bc2739a59bc37'
 TWILIO_PHONE = '+18123125108'
 MY_PHONE = '+917418921860' 
 
@@ -52,6 +52,19 @@ except:
 print("🔌 Twilio alerts ENABLED 🚀")
 print(f"📊 Monitoring: Warning > {WARNING_THRESHOLD}W | Danger > {DANGER_THRESHOLD}W")
 print(f"🎯 Anomaly Score Alerts: CRITICAL > {CRITICAL_ANOMALY_SCORE} | WARNING > {WARNING_ANOMALY_SCORE}\n")
+
+# --- STARTUP VERIFICATION CALL ---
+if not TWILIO_DISABLED:
+    try:
+        print("📞 Initiating System Startup Verification Call...")
+        startup_call = client.calls.create(
+            twiml='<Response><Say>System Boot Sequence Complete. Your Real Time Energy Anomaly Detection pipeline is now fully online.</Say></Response>',
+            to=MY_PHONE,
+            from_=TWILIO_PHONE
+        )
+        print(f"✅ Startup Call Placed Successfully: {startup_call.sid}\n")
+    except Exception as e:
+        print(f"❌ Startup Call Failed: {e}\n")
 
 # ==========================================
 # 🚨 PHASE 4 - ANOMALY ALERT FUNCTIONS
@@ -126,14 +139,14 @@ def trigger_anomaly_alert(meter_id, anomaly_score, power_w, alert_level):
             print(f"   ❌ SMS Failed: {e}")
 
 consumer = KafkaConsumer(
-    'telemetry-raw',
+    'telemetry-processed',
     bootstrap_servers='localhost:9092',
     value_deserializer=lambda x: json.loads(x.decode('utf-8')),
     auto_offset_reset='latest',
     group_id='alert-system-phase4'
 )
 
-print("✅ Connected to Kafka: telemetry-raw")
+print("✅ Connected to Kafka: telemetry-processed")
 print(f"📊 Alert Cooldown: {ALERT_COOLDOWN_MINUTES} minutes per meter\n")
 
 def trigger_voice_call(current_power):
